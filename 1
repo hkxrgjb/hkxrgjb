@@ -3,7 +3,7 @@ local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jens
 
 -- إنشاء نافذة OrionLib
 local Window = OrionLib:MakeWindow({
-    Name = "حرب الوقت | تحديث الصحراء",               
+    Name = "حرب الوقت🌙 | تحديث رمضان",               
     HidePremium = false,                 
     SaveConfig = true,                   
     ConfigFolder = "MemorizationFolder",  
@@ -24,7 +24,7 @@ local Tab1 = Window:MakeTab({
 })
 
 local Tab = Window:MakeTab({
-	Name = "⏳ أوتو فارم الوقت",
+	Name = "⏳ الميزات التلقائية",
 	Icon = "rbxassetid://129435090120413",
 	PremiumOnly = false
 })
@@ -42,7 +42,7 @@ local Tab2 = Window:MakeTab({
 })
 
 local Tab3 = Window:MakeTab({
-    Name = "معلومات السكربت",
+    Name = "معلومات السكربت/التحديث",
     Icon = "rbxassetid://134011743532285",
     PremiumOnly = false
 })
@@ -53,9 +53,10 @@ Tab4:AddSection({ Name = "🛡️ الأمان" })
 -- متغير لحالة التشغيل
 local toggle = false 
 
+
 -- زر تفعيل / إيقاف الحماية
 Tab4:AddToggle({
-    Name = "🚀 الحماية من سرقة الوقت (%50)",
+    Name = "🚀 الحماية من سرقة الوقت (99%)",
     Default = false,
     Callback = function(Value)
         toggle = Value
@@ -75,7 +76,7 @@ local function checkHealth()
     local character = player.Character
     if character then
         local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid and humanoid.Health <= humanoid.MaxHealth / 2 then
+        if humanoid and humanoid.Health < humanoid.MaxHealth then -- تم التعديل هنا
             local rootPart = character:FindFirstChild("HumanoidRootPart")
             if rootPart then
                 rootPart.CFrame = CFrame.new(targetPosition)
@@ -84,11 +85,39 @@ local function checkHealth()
     end
 end
 
+-- تحديث الحالة بانتظام
+runService.Heartbeat:Connect(function()
+    checkHealth()
+end)
+
 -- تشغيل الفحص كل إطار
 runService.RenderStepped:Connect(checkHealth)
 
 -----------------------------------------------
 
+
+
+
+local ToggleState = false
+
+Tab4:AddToggle({
+    Name = "💸 حفظ الوقت في البنك تلقائيًا",
+    Default = false,
+    Callback = function(Value)
+        ToggleState = Value
+        if ToggleState then
+            task.spawn(function()
+                while ToggleState do
+                    local args = {
+                        [1] = 9000000000000000000
+                    }
+                    game:GetService("ReplicatedStorage").Remote.RemoteEvents.Bank.Deposit:FireServer(unpack(args))
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end
+})
 
 
 
@@ -560,6 +589,21 @@ Tab1:AddButton({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Tab1:AddButton({
     Name = "⚔️ هجوم سريع",
     Callback = function()
@@ -961,7 +1005,23 @@ Tab2:AddButton({
 
 
 
+Tab2:AddButton({
+    Name = "🔄 الانتقال الى قاعدة الزومبي",
+    Callback = function()
+        local modelName = "MagmaSpire"  -- اسم الملف الذي يحتوي على الجزء Top
+        local targetPartName = "Top"  -- اسم الجزء المطلوب
 
+        -- البحث عن الجزء "Top" داخل "MagmaSpire"
+        local model = workspace:FindFirstChild(modelName)
+        if model then
+            local topPart = model:FindFirstChild(targetPartName)
+            if topPart then
+                -- نقل اللاعب إلى موقع "Top"
+                game.Players.LocalPlayer.Character:MoveTo(topPart.Position)
+            end
+        end
+    end
+})
 
 
 
@@ -1240,6 +1300,8 @@ Tab:AddToggle({
             startKillScript()
         else
             stopKillScript()
+
+            -- فقط عندما يتم إيقاف السكربت يتم النقل إلى المنطقة الآمنة
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
                 local hrp = character.HumanoidRootPart
@@ -1249,6 +1311,7 @@ Tab:AddToggle({
                     RunService.RenderStepped:Wait()
                 end
             end
+
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "✅ تم الإيقاف",
                 Text = "تم الرجوع إلى المنطقة الآمنة.",
@@ -1288,6 +1351,168 @@ end)
 
 
 
+Tab:AddToggle({
+    Name = "💰 الانتقال الى العملة",
+    Default = false,
+    Callback = function(Value)
+        local isRunning = Value
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local rootPart = character:WaitForChild("HumanoidRootPart")
+        local originalPosition = nil  -- سيتم تحديد الموقع عند الانتقال لأول مرة
+
+        -- دالة للبحث عن EventCoin
+        local function searchForEventCoin()
+            local eventCoin = workspace:FindFirstChild("EventCoin")
+            if eventCoin then
+                -- حفظ الموقع الأصلي قبل الانتقال
+                if not originalPosition then
+                    originalPosition = rootPart.Position
+                end
+                
+                -- الانتقال إلى EventCoin
+                rootPart.CFrame = eventCoin.CFrame
+
+                -- الانتظار حتى تختفي العملة
+                repeat wait(0.1) until not workspace:FindFirstChild("EventCoin")
+
+                -- العودة إلى الموقع الأصلي
+                if originalPosition then
+                    rootPart.CFrame = CFrame.new(originalPosition)
+                    originalPosition = nil -- إعادة التهيئة للبحث القادم
+                end
+            end
+        end
+
+        -- تكرار البحث طالما أن الزر مفعّل
+        while isRunning do
+            searchForEventCoin()
+            wait(0.1) -- تقليل الضغط على السيرفر
+        end
+    end
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Tab:AddToggle({
+    Name = "🧟 القتال التلقائي ضد الزومبي",
+    Default = false,
+    Callback = function(Value)
+        local isRunning = Value
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local rootPart = character:WaitForChild("HumanoidRootPart")
+        local tool = nil
+        local safeZonePosition = Vector3.new(0, 5, 0) -- غير الإحداثيات حسب منطقتك الآمنة
+        local movedToSafeZone = false
+
+        -- تجهيز الأداة من الحقيبة
+        local function equipTool()
+            local backpack = player:FindFirstChild("Backpack")
+            if backpack then
+                tool = backpack:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool.Parent = character
+                end
+            end
+        end
+
+        -- البحث عن أقرب زومبي
+        local function findNearestZombie()
+            local closestZombie = nil
+            local minDistance = math.huge
+
+            for _, zombie in pairs(workspace:GetChildren()) do
+                if zombie:IsA("Model") and zombie:FindFirstChild("Head") and zombie.Name == "Zombie" then
+                    local distance = (rootPart.Position - zombie.Head.Position).Magnitude
+                    if distance < minDistance then
+                        minDistance = distance
+                        closestZombie = zombie
+                    end
+                end
+            end
+            return closestZombie
+        end
+
+        -- قتال الزومبي
+        local function attackZombie(zombie)
+            if not zombie or not zombie:FindFirstChild("Head") then return end
+
+            while isRunning and zombie.Parent and zombie:FindFirstChild("Humanoid") and zombie.Humanoid.Health > 0 do
+                -- تجهيز الأداة قبل الهجوم
+                if not tool or tool.Parent ~= character then
+                    equipTool()
+                end
+
+                -- الانتقال خلف الزومبي بمسافة 3 بوصات بشكل سريع جدًا
+                local behindPosition = zombie.Head.Position - (zombie.Head.CFrame.LookVector * 3)
+                rootPart.CFrame = CFrame.new(behindPosition, zombie.Head.Position) -- يجعل اللاعب يواجه الزومبي
+
+                -- الهجوم باستخدام الأداة
+                if tool then
+                    tool:Activate()
+                end
+
+                task.wait(0.05) -- ضرب بسرعة كبيرة جدًا
+            end
+        end
+
+        -- عند موت اللاعب، يعيد تشغيل القتال مباشرة
+        player.CharacterAdded:Connect(function(newCharacter)
+            if isRunning then
+                character = newCharacter
+                rootPart = character:WaitForChild("HumanoidRootPart")
+                equipTool() -- تجهيز الأداة عند إعادة إحياء اللاعب
+            end
+        end)
+
+        -- التشغيل المستمر
+        task.spawn(function()
+            while isRunning do
+                local zombie = findNearestZombie()
+
+                if zombie then
+                    movedToSafeZone = false
+                    attackZombie(zombie)
+                elseif not movedToSafeZone then
+                    -- الانتقال إلى المنطقة الآمنة مرة واحدة فقط
+                    rootPart.CFrame = CFrame.new(safeZonePosition)
+                    movedToSafeZone = true
+                end
+
+                task.wait(0.01) -- البحث بسرعة عالية جدًا
+            end
+        end)
+    end
+})
+
+
+
+
+
+
+
+
+
+
+local UpdateSection = Tab3:AddSection({ Name = "🆕 التحديثات الجديدة" })
+UpdateSection:AddLabel("✅ تم اضافة ميزة ايداع الوقت بشكل تلقائي")
+UpdateSection:AddLabel("✅ تم اضافة ميزة الانتقال الى قاعدة الزومبي")
+UpdateSection:AddLabel("✅ تم اضافة ميزة الانتقال الى العملة بشكل تلقائي")
+UpdateSection:AddLabel("✅ تم اضافة ميزة قتل الزومبي بشكل تلقائي")
+UpdateSection:AddLabel("✅ اصلاح بعض الاخطأ")
 
 
 
@@ -1303,6 +1528,14 @@ Tab3:AddParagraph("حسابي تلجرام","@hacker8686")
 Tab3:AddLabel("تم صناعة السكربت من الصفر , لذا ستكون هناك مشاكل في التصميم , وشكرا على استخدام السكربت")
 
 
+
+wait(6)
+OrionLib:MakeNotification({
+    Name = "⚠️ تحذير!",
+    Content = "❗ هذا السكربت قد يؤدي إلى حضرك بشكل دائم! نحن غير مسؤلين عن حسابك!",
+    Image = "rbxassetid://134484331149838",
+    Time = 10
+})
 
 -- تشغيل OrionLib
 OrionLib:Init()
