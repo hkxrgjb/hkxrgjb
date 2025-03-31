@@ -1406,25 +1406,34 @@ Tab:AddToggle({
 
 
 
+local isRunning = false
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local tool = nil
+local safeZonePosition = Vector3.new(0, 5, 0) -- غير الإحداثيات حسب منطقتك الآمنة
+local movedToSafeZone = false
+
 Tab:AddToggle({
     Name = "🧟 القتال التلقائي ضد الزومبي",
     Default = false,
     Callback = function(Value)
-        local isRunning = Value
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local rootPart = character:WaitForChild("HumanoidRootPart")
-        local tool = nil
-        local safeZonePosition = Vector3.new(0, 5, 0) -- غير الإحداثيات حسب منطقتك الآمنة
-        local movedToSafeZone = false
+        isRunning = Value
 
-        -- تجهيز الأداة من الحقيبة
+        if not isRunning then
+            movedToSafeZone = false
+            return
+        end
+
+        -- تجهيز الأداة
         local function equipTool()
-            local backpack = player:FindFirstChild("Backpack")
-            if backpack then
-                tool = backpack:FindFirstChildOfClass("Tool")
-                if tool then
-                    tool.Parent = character
+            if not tool or not tool.Parent then
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    tool = backpack:FindFirstChildOfClass("Tool")
+                    if tool then
+                        tool.Parent = character
+                    end
                 end
             end
         end
@@ -1451,10 +1460,7 @@ Tab:AddToggle({
             if not zombie or not zombie:FindFirstChild("Head") then return end
 
             while isRunning and zombie.Parent and zombie:FindFirstChild("Humanoid") and zombie.Humanoid.Health > 0 do
-                -- تجهيز الأداة قبل الهجوم
-                if not tool or tool.Parent ~= character then
-                    equipTool()
-                end
+                equipTool()
 
                 -- الانتقال خلف الزومبي بمسافة 3 بوصات بشكل سريع جدًا
                 local behindPosition = zombie.Head.Position - (zombie.Head.CFrame.LookVector * 3)
@@ -1474,7 +1480,6 @@ Tab:AddToggle({
             if isRunning then
                 character = newCharacter
                 rootPart = character:WaitForChild("HumanoidRootPart")
-                equipTool() -- تجهيز الأداة عند إعادة إحياء اللاعب
             end
         end)
 
@@ -1497,6 +1502,8 @@ Tab:AddToggle({
         end)
     end
 })
+
+
 
 
 
